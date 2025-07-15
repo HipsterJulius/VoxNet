@@ -5,7 +5,7 @@
 # TODO KiTTI data helper
 
 import numpy as np
-import pcl
+# import pcl
 import sys
 import os
 import glob

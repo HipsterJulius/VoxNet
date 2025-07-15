@@ -7,7 +7,7 @@ import os
 
 import numpy as np
 import tensorflow as tf
-import pcl
+#import pcl
 
 import utils.data_helper as helper
 import utils.visualization as viewer
@@ -15,7 +15,7 @@ import utils.visualization as viewer
 FLAGS = tf.app.flags.FLAGS
 
 tf.app.flags.DEFINE_string(
-    'dataset_dir', './data/datasets/sydney-urban-objects-dataset',
+    'dataset_dir', './data/suod',
     """directory that stores the Sydney Urban Object Dataset, short for SUOD.""")
 tf.app.flags.DEFINE_integer(
     'fold', 0,
