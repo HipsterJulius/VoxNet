@@ -5,11 +5,14 @@ import os
 
 from nets.voxNet import VoxNet
 
-INPUT_FILE = "/workspace/VoxNet/voxel.npy"
-OUTPUT_FILE = "/app/output/prediction.txt"
-MODEL_DIR = "logs"
+INPUT_FILE = "/shared/voxel.npy"
+OUTPUT_FILE = "/shared/prediction.txt"
+MODEL_DIR = "/workspace/VoxNet/logs"
 
 def main(argv):
+    
+    print("Es geht los!!")
+    
     # VoxelNet-Model
     model = VoxNet()
     classifier = tf.estimator.Estimator(model_fn=model.core, model_dir=MODEL_DIR)
