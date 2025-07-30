@@ -2,6 +2,7 @@
 
 import os
 import time
+import traceback
 from nets.voxNet import VoxNet
 import tensorflow as tf
 import numpy as np
@@ -13,20 +14,24 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 SHARED_DIR = "/shared"
 VOXEL_SRC = os.path.join(SHARED_DIR, "voxel.npy")
-PREDICTION_PATH_DST = os.path.join(SHARED_DIR, "prediction.txt")
-DONE_PATH = os.path.join(SHARED_DIR, "done.txt")
+PREDICTION_PATH_DST = os.path.join(SHARED_DIR, "prediction_voxnet.txt")
+DONE_PATH = os.path.join(SHARED_DIR, "done_voxnet.txt")
 MODEL_DIR = "/workspace/VoxNet/logs"
+
+# Vorherige Prediction entfernen
+if os.path.exists(PREDICTION_PATH_DST):
+    os.remove(PREDICTION_PATH_DST)
 
 model = VoxNet()
 classifier = tf.estimator.Estimator(model_fn=model.core, model_dir=MODEL_DIR)
-print("Modell geladen...")
+print("VoxNet-Modell geladen.")
 
 print("VoxNet eval runner gestartet...")
 while True:
     if os.path.exists(DONE_PATH):
         print("Stoppsignal empfangen.")
         os.remove(DONE_PATH)
-        break 
+        break
 
     if os.path.exists(VOXEL_SRC):
         try:
@@ -45,14 +50,19 @@ while True:
             pred = next(predictions)
             label_id = int(pred['pred_cls'])
 
+            # Vorherige Prediction-Datei entfernen, falls vorhanden
+            if os.path.exists(PREDICTION_PATH_DST):
+                os.remove(PREDICTION_PATH_DST)
+
             # Ergebnis speichern
             with open(PREDICTION_PATH_DST, "w") as f:
                 f.write(str(label_id))
 
-            # Eingabedatei entfernen für nächsten Zyklus
+            # Eingabe löschen
             os.remove(VOXEL_SRC)
 
         except Exception as e:
-            print("Fehler beim Verarbeiten:", e)
+            print("Fehler beim Verarbeiten:")
+            traceback.print_exc()
     else:
-        time.sleep(0.1)
+        time.sleep(0.05)
