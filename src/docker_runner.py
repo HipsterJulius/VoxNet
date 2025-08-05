@@ -16,6 +16,7 @@ SHARED_DIR = "/shared"
 VOXEL_SRC = os.path.join(SHARED_DIR, "voxel.npy")
 PREDICTION_PATH_DST = os.path.join(SHARED_DIR, "prediction_voxnet.txt")
 DONE_PATH = os.path.join(SHARED_DIR, "done_voxnet.txt")
+READY_PATH = os.path.join(SHARED_DIR, "model_ready_voxnet.txt")
 MODEL_DIR = "/workspace/VoxNet/logs"
 
 # Vorherige Prediction entfernen
@@ -27,13 +28,21 @@ classifier = tf.estimator.Estimator(model_fn=model.core, model_dir=MODEL_DIR)
 print("VoxNet-Modell geladen.")
 
 print("VoxNet eval runner gestartet...")
+ready_flag_set = False
 while True:
     if os.path.exists(DONE_PATH):
         print("Stoppsignal empfangen.")
         os.remove(DONE_PATH)
         break
 
-    if os.path.exists(VOXEL_SRC):
+    if os.path.exists(VOXEL_SRC) and not os.path.exists(PREDICTION_PATH_DST):
+        # → Signal "bereit" erst setzen, wenn erste Anfrage eingeht
+        if not ready_flag_set:
+            with open(READY_PATH, "w") as f:
+                f.write("ready")
+            ready_flag_set = True
+            print("Modell ist jetzt bereit (model_ready_voxnet.txt gesetzt).")
+
         try:
             # Eingabe laden
             voxel = np.load(VOXEL_SRC).astype(np.float32)
@@ -50,15 +59,12 @@ while True:
             pred = next(predictions)
             label_id = int(pred['pred_cls'])
 
-            # Vorherige Prediction-Datei entfernen, falls vorhanden
             if os.path.exists(PREDICTION_PATH_DST):
                 os.remove(PREDICTION_PATH_DST)
 
-            # Ergebnis speichern
             with open(PREDICTION_PATH_DST, "w") as f:
                 f.write(str(label_id))
 
-            # Eingabe löschen
             os.remove(VOXEL_SRC)
 
         except Exception as e:
